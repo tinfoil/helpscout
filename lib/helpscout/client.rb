@@ -253,6 +253,33 @@ module HelpScout
       end
     end
 
+    # Sends a PUT request to update a single item from the Help Scout API.
+    #
+    # url     String  A string representing the url to PUT.
+    # params  Hash    A hash of PUT parameters to use for this particular
+    #                 request.
+    #
+    # Response
+    # 'true' if successful, nil if not
+    def self.update_item(auth, url, params={})
+      begin
+        response = Client.put(
+          url,
+          :basic_auth => auth,
+          :headers    => { 'Content-Type' => 'application/json' },
+          :body       => params
+        )
+      rescue SocketError => se
+        raise StandardError, se.message
+      end
+
+      if response.code == 200
+        true
+      else
+        raise StandardError.new("Server Response: #{response.code} #{response.message}")
+      end
+    end
+
 
     # HelpScout::Client.new
     #
@@ -519,6 +546,29 @@ module HelpScout
       end
     end
 
+    # Update Conversation
+    # http://developer.helpscout.net/help-desk-api/conversations/update/
+    def update_conversation(id, conversation)
+      url = "/conversations/#{id}.json"
+
+      begin
+        Client.update_item(@auth, url, conversation.to_json)
+      rescue StandardError => e
+        puts "Could not update conversation: #{e.message}"
+      end
+    end
+
+    # Create Thread
+    # http://developer.helpscout.net/help-desk-api/conversations/create-thread/
+    def create_thread(conversation, thread)
+      url = "/conversations/#{conversation.id}.json"
+
+      begin
+        Client.create_item(@auth, url, thread.to_json)
+      rescue StandardError => e
+        puts "Could not add thread: #{e.message}"
+      end
+    end
 
     # List Conversations
     # http://developer.helpscout.net/conversations/list/
